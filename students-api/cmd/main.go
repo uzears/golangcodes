@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/uzears/students-api/internal/config"
 )
 
 func main() {
-	fmt.Println("Hello Students API ")
 
+	cfg = config.MustLoad()
 }
