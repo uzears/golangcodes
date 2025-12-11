@@ -7,7 +7,7 @@
   {
     "id": 2,
     "description": "Have lunch",
-    "status": "pending"
+    "status": "done"
   },
   {
     "id": 3,
@@ -37,6 +37,11 @@
   {
     "id": 8,
     "description": "Watch Tv",
+    "status": "pending"
+  },
+  {
+    "id": 9,
+    "description": "Sleeping time",
     "status": "pending"
   }
 ]

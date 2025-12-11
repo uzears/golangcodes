@@ -10,9 +10,19 @@ import (
 	"task-tracker-cli/internal/storage"
 )
 
-type TaskService struct{}
+type TaskServiceImpl struct {
+	Store storage.Storage
+}
 
-func (s *TaskService) ActnSelector() error {
+/* not of use
+type TaskService interface {
+	ActnSelector() error
+	AddTask() error
+	DeleteTask() error
+	ListTasks() error
+}*/
+
+func (s *TaskServiceImpl) ActnSelector() error {
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -36,8 +46,7 @@ func (s *TaskService) ActnSelector() error {
 	switch taskType {
 	case "a":
 		fmt.Println("Inside Add Task")
-		add := TaskService{}
-		err := add.AddTask()
+		err := s.AddTask()
 		if err != nil {
 			fmt.Println("Error while adding task :", err)
 			return err
@@ -46,8 +55,7 @@ func (s *TaskService) ActnSelector() error {
 
 	case "l":
 		fmt.Println("Inside List Task")
-		display := TaskService{}
-		err := display.DisplayTask()
+		err := s.DisplayTask()
 		if err != nil {
 			return err
 		}
@@ -55,8 +63,7 @@ func (s *TaskService) ActnSelector() error {
 
 	case "d":
 		fmt.Println("Inside Delete Task")
-		delete := TaskService{}
-		err := delete.DeleteTask()
+		err := s.DeleteTask()
 		if err != nil {
 			return err
 		}
@@ -64,6 +71,12 @@ func (s *TaskService) ActnSelector() error {
 	case "e":
 		fmt.Println("Exiting ...")
 		return nil
+
+	case "m":
+		err := s.MarkTaskDone()
+		if err != nil {
+			return err
+		}
 
 	default:
 		fmt.Println("Wrong Choice")
@@ -73,14 +86,14 @@ func (s *TaskService) ActnSelector() error {
 	return nil
 }
 
-func (s *TaskService) AddTask() error {
+func (s *TaskServiceImpl) AddTask() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Enter the task")
 
 	desc, _ := reader.ReadString('\n')
 	desc = strings.TrimSpace(desc)
 
-	data, err := storage.LoadTask()
+	data, err := s.Store.LoadTask()
 	if err != nil {
 		return err
 	}
@@ -93,11 +106,11 @@ func (s *TaskService) AddTask() error {
 
 	data = append(data, newTask)
 
-	err = storage.SaveTasks(data)
+	err = s.Store.SaveTasks(data)
 	if err != nil {
 		return err
 	}
-	othActn := TaskService{}
+	othActn := TaskServiceImpl{}
 	err = othActn.OtherActn()
 	if err != nil {
 		return err
@@ -107,9 +120,9 @@ func (s *TaskService) AddTask() error {
 	return nil
 }
 
-func (s *TaskService) DisplayTask() error {
+func (s *TaskServiceImpl) DisplayTask() error {
 	fmt.Println("Displaying Task :")
-	tasks, err := storage.LoadTask()
+	tasks, err := s.Store.LoadTask()
 	if err != nil {
 		return err
 	}
@@ -118,8 +131,7 @@ func (s *TaskService) DisplayTask() error {
 	for _, n := range tasks {
 		fmt.Printf("ID :%d: Description :%s: Status :%s:\n", n.Id, n.Description, n.Status)
 	}
-	othActn := TaskService{}
-	err = othActn.OtherActn()
+	err = s.OtherActn()
 	if err != nil {
 		return err
 	}
@@ -127,7 +139,7 @@ func (s *TaskService) DisplayTask() error {
 	return nil
 }
 
-func (d *TaskService) DeleteTask() error {
+func (d *TaskServiceImpl) DeleteTask() error {
 
 	var newData []models.Tasks
 
@@ -142,7 +154,7 @@ func (d *TaskService) DeleteTask() error {
 		return err
 	}
 
-	deleteData, err := storage.LoadTask()
+	deleteData, err := d.Store.LoadTask()
 	if err != nil {
 		return err
 	}
@@ -154,15 +166,14 @@ func (d *TaskService) DeleteTask() error {
 		newData = append(newData, i)
 	}
 
-	err = storage.SaveTasks(newData)
+	err = d.Store.SaveTasks(newData)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Task Delete Successfully ")
 
-	othActn := TaskService{}
-	err = othActn.OtherActn()
+	err = d.OtherActn()
 	if err != nil {
 		return err
 	}
@@ -170,7 +181,25 @@ func (d *TaskService) DeleteTask() error {
 	return nil
 }
 
-func (s *TaskService) OtherActn() error {
+func (s *TaskServiceImpl) MarkTaskDone() error {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Enter the task id to mark as done")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
+	markId, err := strconv.Atoi(input)
+	if err != nil {
+		fmt.Println("Invalid Id")
+		return err
+	}
+	err = s.Store.UpdateTasks(markId, "done")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *TaskServiceImpl) OtherActn() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Do you want to Repeat Action?")
 	actn, _ := reader.ReadString('\n')
@@ -178,8 +207,7 @@ func (s *TaskService) OtherActn() error {
 	actn = strings.ToLower(actn)
 
 	if actn == "y" {
-		newActn := TaskService{}
-		err := newActn.ActnSelector()
+		err := s.ActnSelector()
 		if err != nil {
 			return err
 		}
