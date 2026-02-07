@@ -20,7 +20,7 @@ func NewHandler(service Service, log logger.Logger) *Handler {
 }
 
 func (h *Handler) Register(c *gin.Context) {
-	log := c.MustGet("Logger").(logger.Logger)
+	log := c.MustGet("logger").(logger.Logger)
 
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,10 +46,14 @@ func (h *Handler) Register(c *gin.Context) {
 
 	log.Info("user registered successfully", "user_id", userID)
 
+	c.JSON(http.StatusCreated, gin.H{
+		"id": userID,
+	})
+
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	log := c.MustGet("Logger").(logger.Logger)
+	log := c.MustGet("logger").(logger.Logger)
 
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

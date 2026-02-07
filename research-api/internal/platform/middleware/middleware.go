@@ -1,10 +1,15 @@
 package middleware
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/uzears/golangcodes/research-api/internal/platform/logger"
 )
 
@@ -43,6 +48,21 @@ func Logger(log logger.Logger) gin.HandlerFunc {
 		)
 	}
 }
+func CORS(allowedOrigin string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
+	}
+}
 func JWT(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
@@ -70,16 +90,34 @@ func JWT(secret string) gin.HandlerFunc {
 	}
 }
 func generateRequestID() string {
-	// UUID or nanoid (implementation choice)
-	return "req-123456"
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("req-%d", time.Now().UnixNano())
+	}
+	return "req-" + hex.EncodeToString(b)
 }
 
 type TokenClaims struct {
-	UserID string
+	UserID string `json:"sub"`
+	jwt.RegisteredClaims
 }
 
 func validateToken(tokenStr, secret string) (*TokenClaims, error) {
-	return &TokenClaims{
-		UserID: "user-123",
-	}, nil
+	claims := &TokenClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+	if claims.UserID == "" {
+		return nil, fmt.Errorf("missing subject")
+	}
+	return claims, nil
 }

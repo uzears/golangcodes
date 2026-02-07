@@ -46,6 +46,7 @@ func main() {
 	addr := ":" + strconv.Itoa(cfg.Port)
 	server := http.NewServer(addr, cfg.Env)
 	router := server.Router()
+	router.Use(middleware.CORS("http://localhost:3000"))
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Logger(logr))
 
