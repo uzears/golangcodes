@@ -48,7 +48,7 @@ func (h *Handler) Register(c *gin.Context) {
 
 }
 
-func (h *header) Login(c *gin.Context) {
+func (h *Handler) Login(c *gin.Context) {
 	log := c.MustGet("Logger").(logger.Logger)
 
 	var req LoginRequest

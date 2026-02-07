@@ -15,6 +15,7 @@ import (
 	"github.com/uzears/golangcodes/research-api/internal/platform/http"
 	"github.com/uzears/golangcodes/research-api/internal/platform/logger"
 	"github.com/uzears/golangcodes/research-api/internal/platform/middleware"
+	"github.com/uzears/golangcodes/research-api/internal/auth"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	cfg := config.Load()
 
 	// 3. Initialize logger (Zerolog via interface)
-	logr := logger.New(cfg.Log.Level)
+	logr := logger.New()
 	logr.Info(
 		"application starting",
 		"app", cfg.AppName,

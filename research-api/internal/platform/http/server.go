@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -36,10 +37,14 @@ func NewServer(addr string, env string) *Server {
 	}
 }
 
+func (s *Server) Router() *gin.Engine {
+	return s.engine
+}
+
 func (s *Server) Start() error {
 	return s.server.ListenAndServe()
 }
 
-func (s *Server) Shutdown() error {
-	return s.server.Close()
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }
