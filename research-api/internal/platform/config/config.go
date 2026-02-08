@@ -25,9 +25,14 @@ type Config struct {
 }
 
 func Load() *Config {
+	port := getInt("APP_PORT", 0)
+	if port == 0 {
+		port = getInt("PORT", 8080)
+	}
+
 	cfg := &Config{
 		AppName: getString("APP_NAME", "Research-api"),
-		Port:    getInt("APP_PORT", 8080),
+		Port:    port,
 		Env:     getString("APP_ENV", "development"),
 	}
 	cfg.DB.URL = getString("DB_URL", "")

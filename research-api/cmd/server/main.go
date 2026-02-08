@@ -21,7 +21,9 @@ import (
 func main() {
 
 	// 1. Load environment variables (local dev only)
-	_ = godotenv.Load()
+	if os.Getenv("APP_ENV") != "production" {
+		_ = godotenv.Load()
+	}
 
 	// 2. Load application configuration
 	cfg := config.Load()
