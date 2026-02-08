@@ -48,9 +48,15 @@ func Logger(log logger.Logger) gin.HandlerFunc {
 		)
 	}
 }
-func CORS(allowedOrigin string) gin.HandlerFunc {
+func CORS(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		origin := c.GetHeader("Origin")
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")

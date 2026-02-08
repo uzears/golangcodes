@@ -5,17 +5,18 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/uzears/golangcodes/research-api/internal/auth"
 	"github.com/uzears/golangcodes/research-api/internal/platform/config"
 	"github.com/uzears/golangcodes/research-api/internal/platform/database"
 	"github.com/uzears/golangcodes/research-api/internal/platform/http"
 	"github.com/uzears/golangcodes/research-api/internal/platform/logger"
 	"github.com/uzears/golangcodes/research-api/internal/platform/middleware"
-	"github.com/uzears/golangcodes/research-api/internal/auth"
 )
 
 func main() {
@@ -48,7 +49,8 @@ func main() {
 	addr := ":" + strconv.Itoa(cfg.Port)
 	server := http.NewServer(addr, cfg.Env)
 	router := server.Router()
-	router.Use(middleware.CORS("http://localhost:3000"))
+	allowedOrigins := parseOrigins(os.Getenv("CORS_ORIGINS"))
+	router.Use(middleware.CORS(allowedOrigins))
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Logger(logr))
 
@@ -89,4 +91,24 @@ func main() {
 	}
 
 	logr.Info("application stopped gracefully")
+}
+
+func parseOrigins(raw string) []string {
+	if raw == "" {
+		return []string{
+			"http://localhost:3000",
+			"http://127.0.0.1:3000",
+			"https://golangcodes.vercel.app",
+		}
+	}
+
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		origin := strings.TrimSpace(part)
+		if origin != "" {
+			origins = append(origins, origin)
+		}
+	}
+	return origins
 }
