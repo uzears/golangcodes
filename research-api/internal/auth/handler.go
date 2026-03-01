@@ -21,6 +21,7 @@ func NewHandler(service Service, log logger.Logger) *Handler {
 
 func (h *Handler) Register(c *gin.Context) {
 	log := c.MustGet("logger").(logger.Logger)
+	log.Debug("register request received")
 
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,6 +55,7 @@ func (h *Handler) Register(c *gin.Context) {
 
 func (h *Handler) Login(c *gin.Context) {
 	log := c.MustGet("logger").(logger.Logger)
+	log.Debug("login request received")
 
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -86,9 +88,11 @@ func (h *Handler) Login(c *gin.Context) {
 
 func (h *Handler) Me(c *gin.Context) {
 	log := c.MustGet("logger").(logger.Logger)
+	log.Debug("me request received")
 
 	userID, exists := c.Get("user_id")
 	if !exists {
+		log.Debug("me request missing user_id in context")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "unauthorized",
 		})

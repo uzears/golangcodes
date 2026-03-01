@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -18,14 +19,20 @@ type zeroLogger struct {
 	log zerolog.Logger
 }
 
-func New() Logger {
+func New(level string) Logger {
 	// Use Unix timestamps for performance and log pipelines
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	parsedLevel := zerolog.InfoLevel
+	if l, err := zerolog.ParseLevel(strings.ToLower(strings.TrimSpace(level))); err == nil {
+		parsedLevel = l
+	}
 
 	z := zerolog.New(os.Stdout).
 		With().
 		Timestamp().
-		Logger()
+		Logger().
+		Level(parsedLevel)
 
 	return &zeroLogger{log: z}
 }

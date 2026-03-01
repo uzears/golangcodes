@@ -37,6 +37,7 @@ func Logger(log logger.Logger) gin.HandlerFunc {
 		)
 
 		c.Set("logger", reqLog)
+		reqLog.Debug("http request started")
 
 		c.Next()
 

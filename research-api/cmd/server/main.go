@@ -17,20 +17,24 @@ import (
 	"github.com/uzears/golangcodes/research-api/internal/platform/http"
 	"github.com/uzears/golangcodes/research-api/internal/platform/logger"
 	"github.com/uzears/golangcodes/research-api/internal/platform/middleware"
+	"github.com/uzears/golangcodes/research-api/internal/portfolio"
 )
 
 func main() {
 
 	// 1. Load environment variables (local dev only)
 	if os.Getenv("APP_ENV") != "production" {
+		// Support running from repo root (`go run ./cmd/server`) and from
+		// cmd/server (`go run .`) during local development.
 		_ = godotenv.Load()
+		_ = godotenv.Load("../../.env")
 	}
 
 	// 2. Load application configuration
 	cfg := config.Load()
 
 	// 3. Initialize logger (Zerolog via interface)
-	logr := logger.New()
+	logr := logger.New(cfg.Log.Level)
 	logr.Info(
 		"application starting",
 		"app", cfg.AppName,
@@ -44,6 +48,9 @@ func main() {
 	authRepo := auth.NewRepository(db)
 	authService := auth.NewService(authRepo, cfg.JWT.Secret, logr)
 	authHandler := auth.NewHandler(authService, logr)
+	portfolioRepo := portfolio.NewRepository(db)
+	portfolioService := portfolio.NewService(portfolioRepo)
+	portfolioHandler := portfolio.NewHandler(portfolioService, logr)
 
 	// 6. Initialize HTTP server (Gin)
 	addr := ":" + strconv.Itoa(cfg.Port)
@@ -67,6 +74,8 @@ func main() {
 	protected.Use(middleware.JWT(cfg.JWT.Secret))
 	{
 		protected.GET("/me", authHandler.Me)
+		protected.POST("/portfolio/stocks", portfolioHandler.CreateStock)
+		protected.GET("/portfolio/stocks", portfolioHandler.ListStocks)
 	}
 
 	// 8. Start HTTP server (non-blocking)
