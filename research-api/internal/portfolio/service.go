@@ -6,14 +6,17 @@ import (
 	"encoding/hex"
 	"errors"
 	"time"
+
+	"github.com/uzears/golangcodes/research-api/internal/platform/logger"
 )
 
 type service struct {
 	repo Repository
+	log  logger.Logger
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(repo Repository, log logger.Logger) Service {
+	return &service{repo: repo, log: log}
 }
 
 func (s *service) CreateStock(ctx context.Context, userID, stockName string, targetPrice, stopLoss float64, term StockTerm) (*Stock, error) {
@@ -38,7 +41,7 @@ func (s *service) CreateStock(ctx context.Context, userID, stockName string, tar
 
 	now := time.Now().UTC()
 	stock := &Stock{
-		ID:          newID(),
+		ID:          s.newID(),
 		UserID:      userID,
 		StockName:   stockName,
 		TargetPrice: targetPrice,
@@ -72,10 +75,12 @@ func isValidTerm(term StockTerm) bool {
 	}
 }
 
-func newID() string {
+func (s *service) newID() string {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return hex.EncodeToString([]byte(time.Now().UTC().Format("20060102150405.000000000")))
 	}
-	return hex.EncodeToString(b)
+	id := hex.EncodeToString(b)
+	s.log.Debug("new id generated", "id", id)
+	return id
 }

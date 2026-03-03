@@ -49,7 +49,7 @@ func main() {
 	authService := auth.NewService(authRepo, cfg.JWT.Secret, logr)
 	authHandler := auth.NewHandler(authService, logr)
 	portfolioRepo := portfolio.NewRepository(db)
-	portfolioService := portfolio.NewService(portfolioRepo)
+	portfolioService := portfolio.NewService(portfolioRepo, logr)
 	portfolioHandler := portfolio.NewHandler(portfolioService, logr)
 
 	// 6. Initialize HTTP server (Gin)
