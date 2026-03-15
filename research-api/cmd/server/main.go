@@ -74,7 +74,7 @@ func main() {
 	protected.Use(middleware.JWT(cfg.JWT.Secret))
 	{
 		protected.GET("/me", authHandler.Me)
-		protected.POST("/portfolio/stocks", portfolioHandler.CreateStock)
+		protected.POST("/portfolio/stocks", portfolioHandler.CreateStock) // if we send a post request
 		protected.GET("/portfolio/stocks", portfolioHandler.ListStocks)
 	}
 
